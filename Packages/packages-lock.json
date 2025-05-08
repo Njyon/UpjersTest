@@ -1,5 +1,41 @@
 {
   "dependencies": {
+    "com.domybest.mybox": {
+      "version": "https://github.com/Deadcows/MyBox.git",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {
+        "com.unity.ugui": "1.0.0"
+      },
+      "hash": "c603c98c48f610eea30abc48ca4ab04288a42567"
+    },
+    "com.febucci.custom-hierarchy": {
+      "version": "https://github.com/febucci/unitypackage-custom-hierarchy.git",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "845f7521c4695bc30d9efe0c3168b616cc51454a"
+    },
+    "com.kybernetik.ultevents": {
+      "version": "file:com.kybernetik.ultevents",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {}
+    },
+    "com.madsbangh.easybuttons": {
+      "version": "https://github.com/madsbangh/EasyButtons.git#upm",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "73d2383899210da808a1b27329cdaa8000de557b"
+    },
+    "com.silverdale.asset-reference-viewer": {
+      "version": "https://github.com/Dasparion/AssetReferenceViewer.git",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "623096f66e90726a2219910dd13d06f5b97054af"
+    },
     "com.unity.ai.navigation": {
       "version": "2.0.7",
       "depth": 0,
