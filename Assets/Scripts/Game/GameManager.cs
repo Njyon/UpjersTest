@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using AYellowpaper.SerializedCollections;
 using Ultra;
 using UnityEngine;
 
@@ -6,22 +8,29 @@ public class GameManager : MonoSingelton<GameManager>
     [Header("PlayerHealth")]
     [SerializeField] int maxHealth;
     ResourceBase health;
-    public ResourceBase Health
-    {
-        get {  return health; }
-    }
 
     [Header("PlayerGold")]
     [SerializeField] int startGold;
     ResourceBase gold;
-    public ResourceBase Gold
-    {
-        get { return gold; }
-    }
 
+    [Header("TowerOptions")]
+    public List<ScriptableRequest> possibleBuildingRequests = new List<ScriptableRequest>();
+
+    [Header("ScriptableCurrencys")]
+    [SerializedDictionary("CurrencyType", "ScriptableCurrency")]
+    [SerializeField] SerializedDictionary<CurrencyType, ScriptableCurrency> currencys;
+     
+
+    ResourceAccountent resourceAccountent;
+    public ResourceAccountent ResourceAccountent
+    {
+        get { return resourceAccountent; }
+    }
 
     void Start()
     {
+        resourceAccountent = new ResourceAccountent(50, ResourceGetter, currencys);
+
         health = new ResourceBase(maxHealth, maxHealth);
         health.onCurrentValueChange += HealthValueChanged;
         HealthValueChanged(health.CurrentValue, 0);
@@ -51,5 +60,19 @@ public class GameManager : MonoSingelton<GameManager>
     void GoldValueChanged(float newValue, float oldValue)
     {
         UIManager.Instance.goldVisulizer.CurrencyAmountChanged(Mathf.FloorToInt(oldValue), Mathf.FloorToInt(newValue));
+    }
+
+    ResourceBase ResourceGetter(CurrencyType currencyType)
+    {
+        switch (currencyType)
+        {
+            case CurrencyType.Gold:
+                return gold;
+            case CurrencyType.Health:
+                return health;
+            default:
+                Ultra.Utilities.Instance.DebugErrorString("GameManager", "ResourceGetter", "CurrencyType not Implemented!");
+                return null;
+        }
     }
 }

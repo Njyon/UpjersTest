@@ -15,6 +15,15 @@ public class GamePhaseManager : MonoBehaviour
         currentPhase.UpdatePhase(Time.deltaTime);
     }
 
+    void OnDestroy()
+    {
+        if (currentPhase != null)
+        {
+            currentPhase.ExitPhase();
+            currentPhase = null;
+        }
+    }
+
     public void StartPhase(GamePhaseType phaseType)
     {
         currentPhase?.ExitPhase();

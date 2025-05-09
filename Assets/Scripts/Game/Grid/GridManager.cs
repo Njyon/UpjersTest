@@ -1,13 +1,20 @@
 using System.Collections.Generic;
+using Ultra;
 using UnityEngine;
 
-public class GridManager : MonoBehaviour
+public class GridManager : MonoSingelton<GridManager>
 {
     [Header("Grid")]
     public GridTile gridTile;
     public int gridWidth = 5;
     public int gridHeight = 5;
     public float padding = 0.2f;
+    public GameObject parent;
+    Vector3 gridSize = Vector3.zero;
+    public Vector3 GridSize
+    {
+        get { return gridSize; }
+    }
 
     [Header("Path")]
     private GridTile[,] gridTiles;
@@ -28,14 +35,14 @@ public class GridManager : MonoBehaviour
         }
 
         // Check Size 
-        Vector3 cubeSize = GetPrefabSize(gridTile);
+        gridSize = GetPrefabSize(gridTile);
 
         // Center Grind
-        Vector3 startPos = transform.position - new Vector3((gridWidth - 1) * (cubeSize.x + padding) / 2f, 0, (gridHeight - 1) * (cubeSize.z + padding) / 2f);
+        Vector3 startPos = transform.position - new Vector3((gridWidth - 1) * (gridSize.x + padding) / 2f, 0, (gridHeight - 1) * (gridSize.z + padding) / 2f);
 
         gridTiles = new GridTile[gridWidth, gridHeight];
 
-        CreateGrid(cubeSize, startPos);
+        CreateGrid(gridSize, startPos);
 
         GeneratePath();
     }
@@ -48,7 +55,14 @@ public class GridManager : MonoBehaviour
             {
                 Vector3 spawnPos = startPos + new Vector3( x * (cubeSize.x + padding), 0, y * (cubeSize.z + padding));
 
-                GridTile gridTileObj = Instantiate(gridTile, spawnPos, Quaternion.identity, transform);
+                GridTile gridTileObj = Instantiate(gridTile, spawnPos, Quaternion.identity, parent.transform);
+
+                // scale the box collider so whe dont have space between the tiles, needed for the Tower placement.
+                Vector3 size = gridTileObj.col.size;
+                size.x += padding;
+                size.z += padding;
+                gridTileObj.col.size = size;
+
                 gridTiles[x, y] = gridTileObj;
             }
         }

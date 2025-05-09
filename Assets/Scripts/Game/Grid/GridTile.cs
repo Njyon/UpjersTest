@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.Tilemaps;
 using UnityEngine.UI;
 
-public class GridTile : MonoBehaviour, ISelectable
+public class GridTile : MonoBehaviour/*, ISelectable*/
 {
     bool isPath;
     public bool IsPath
@@ -23,6 +23,8 @@ public class GridTile : MonoBehaviour, ISelectable
         get { return IsPath || IsBuildOn; }
     }
 
+    public BoxCollider col;
+
     void Start()
     {
         
@@ -35,14 +37,14 @@ public class GridTile : MonoBehaviour, ISelectable
 
     #region Debug Tile
     // Implement Selectable to debug Tile
-    public void Select()
-    {
-        Ultra.Utilities.Instance.DebugLogOnScreen(StringColor.Teal + gameObject.name + " Selected | Is blocked = " + IsBlocked + StringColor.EndColor, 5);
-    }
+    //public void Select()
+    //{
+    //    Ultra.Utilities.Instance.DebugLogOnScreen(StringColor.Teal + gameObject.name + " Selected | Is blocked = " + IsBlocked + StringColor.EndColor, 5);
+    //}
 
-    public void Unselect()
-    {
+    //public void Unselect()
+    //{
 
-    }
+    //}
     #endregion
 }
