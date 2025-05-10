@@ -5,7 +5,7 @@ using UnityEngine;
 public class BuildTowerRequest : ARequest
 {
     public Tower TowerPrefab;
-    public Vector2 Size;
+    public Vector2Int Size;
 
     public override void ExecuteRequest(IRequestOwner owner)
     {

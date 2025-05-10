@@ -1236,6 +1236,8 @@ MonoBehaviour:
   startGold: 200
   possibleBuildingRequests:
   - {fileID: 11400000, guid: e37e773c28a544c45a7bcb11b5420e84, type: 2}
+  - {fileID: 11400000, guid: e98b7c77d80c99c4387a92b0d75d85a4, type: 2}
+  - {fileID: 11400000, guid: 7ebdc5951ef919147abad691ec00150d, type: 2}
   currencys:
     _serializedList:
     - Key: 1

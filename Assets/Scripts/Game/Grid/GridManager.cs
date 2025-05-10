@@ -11,13 +11,17 @@ public class GridManager : MonoSingelton<GridManager>
     public float padding = 0.2f;
     public GameObject parent;
     Vector3 gridSize = Vector3.zero;
-    public Vector3 GridSize
+    public Vector3 TileSize
     {
         get { return gridSize; }
     }
 
     [Header("Path")]
     private GridTile[,] gridTiles;
+    public GridTile[,] GridTiles
+    {
+        get { return gridTiles; }
+    }
     private List<Vector2Int> path = new List<Vector2Int>();
     [SerializeField] private Color pathColor = new Color(0.5f, 0.25f, 0f);
 
@@ -56,6 +60,7 @@ public class GridManager : MonoSingelton<GridManager>
                 Vector3 spawnPos = startPos + new Vector3( x * (cubeSize.x + padding), 0, y * (cubeSize.z + padding));
 
                 GridTile gridTileObj = Instantiate(gridTile, spawnPos, Quaternion.identity, parent.transform);
+                gridTileObj.GridPos = new Vector2Int(x, y);
 
                 // scale the box collider so whe dont have space between the tiles, needed for the Tower placement.
                 Vector3 size = gridTileObj.col.size;

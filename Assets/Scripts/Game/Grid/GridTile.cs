@@ -23,6 +23,13 @@ public class GridTile : MonoBehaviour/*, ISelectable*/
         get { return IsPath || IsBuildOn; }
     }
 
+    Vector2Int gridPos;
+    public Vector2Int GridPos 
+    {
+        get { return gridPos; }
+        set { gridPos = value; }
+    }
+
     public BoxCollider col;
 
     void Start()

@@ -7,6 +7,20 @@ public class BuildingManager : MonoSingelton<BuildingManager>
     [SerializeField] Transform worldTransform;
     bool tryingToBuild = false;
     Tower cachedBuildingTower;
+    Vector2Int cachedTowerSize;
+    GridTile cachedHitGridTile = null;
+
+    bool TryingToBuild
+    {
+        get { return tryingToBuild; }
+        set {
+            tryingToBuild = value; 
+            if (!tryingToBuild)
+            {
+                cachedHitGridTile = null;
+            }
+        }
+    }
 
     void Start()
     {
@@ -16,47 +30,98 @@ public class BuildingManager : MonoSingelton<BuildingManager>
     void OnDestroy()
     {
         SelectionManager.Instance.selectionEvent -= OnSelect;
-        tryingToBuild = false;
+        TryingToBuild = false;
     }
 
-    public void TryToBuildTower(Tower towerPrefab, Vector2 towerSize)
+    public void TryToBuildTower(Tower towerPrefab, Vector2Int towerSize)
     {
         cachedBuildingTower = Instantiate(towerPrefab, worldTransform);
         cachedBuildingTower.gameObject.name = "Try Building " + cachedBuildingTower.gameObject.name;
         cachedBuildingTower.BuildingState = TowerBuildingState.TryToBuild;
+        cachedTowerSize = towerSize;
 
-        tryingToBuild = true;
+        TryingToBuild = true;
         
     }
 
     void Update()
     {
-        if (tryingToBuild)
+        if (TryingToBuild)
         {
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            if (Physics.Raycast(ray, out RaycastHit hit, 100f))
+            RaycastHit[] hits = Physics.RaycastAll(ray, 100f);
+            foreach (RaycastHit hit in hits) 
             {
-                GameObject tile = hit.collider.gameObject;
-                GridTile gridTile = tile.GetComponent<GridTile>();
-                if (gridTile != null && cachedBuildingTower != null)
+                GameObject go = hit.collider.gameObject;
+                GridTile gridTile = go.GetComponent<GridTile>();
+                // should probably use layers with casting on the tile but good enough for now
+                if (gridTile == null) continue;
+                if (gridTile == cachedHitGridTile) break;
+                if (cachedBuildingTower != null)
                 {
-                    Vector3 gridPos = gridTile.transform.position;
-                    float gridHalfHight = GridManager.Instance.GridSize.y / 2;
-                    gridPos.y += gridHalfHight;
-                    cachedBuildingTower.transform.position = gridPos;
+                    List<Vector3> tilePositions = new List<Vector3>();
+                    List<GridTile> gridTiles = new List<GridTile>();
 
-                    if (gridTile.IsBlocked)
-                        cachedBuildingTower.BuildingState = TowerBuildingState.Blocked;
-                    else
+                    for (int x = 0; x < cachedTowerSize.x; x++)
+                    {
+                        for (int y = 0; y < cachedTowerSize.y; y++)
+                        {
+                            // possitions can be outside the grid so we guess the position for visualization purpose
+                            Vector3 possibleTilePos = gridTile.transform.position + new Vector3((GridManager.Instance.TileSize.x * x) + GridManager.Instance.padding * x, 0, (GridManager.Instance.TileSize.z * y) + GridManager.Instance.padding * y);
+                            tilePositions.Add(possibleTilePos);
+                            if (GridManager.Instance.gridWidth > gridTile.GridPos.x + x && GridManager.Instance.gridHeight > gridTile.GridPos.y + y)
+                            {
+                                GridTile tile = GridManager.Instance.GridTiles[gridTile.GridPos.x + x, gridTile.GridPos.y + y];
+                                gridTiles.Add(tile);
+                            }
+                            else
+                            {
+                                gridTiles.Add(null);
+                            }
+                        }
+                    }
+
+                    Vector3 TowerPosition = GetTowerPosition(tilePositions); ;
+                    float gridHalfHight = GridManager.Instance.TileSize.y / 2;
+                    TowerPosition.y += gridHalfHight;
+                    cachedBuildingTower.transform.position = TowerPosition;
+
+                    bool canPlaceTomwer = true;
+                    foreach (var tile in gridTiles)
+                    {
+                        if (tile == null || tile.IsBlocked)
+                        {
+                            canPlaceTomwer = false;
+                            cachedBuildingTower.BuildingState = TowerBuildingState.Blocked;
+                            break;
+                        }   
+                    }
+
+                    if (canPlaceTomwer)
                         cachedBuildingTower.BuildingState = TowerBuildingState.TryToBuild;
+
+                    cachedHitGridTile = gridTile;
+
+                    break;
                 }
             }
         }
     }
 
+    Vector3 GetTowerPosition(List<Vector3> tilePositions)
+    {
+        Vector3 averagePos = Vector3.zero;
+        foreach (Vector3 pos in tilePositions)
+        {
+            averagePos += pos;
+        }
+        averagePos /= tilePositions.Count;
+        return averagePos;
+    }
+
     void OnSelect(List<ISelectable> newSelection, List<ISelectable> oldSelection)
     {
-        if (tryingToBuild) 
+        if (TryingToBuild) 
         {
             Build();
         }
