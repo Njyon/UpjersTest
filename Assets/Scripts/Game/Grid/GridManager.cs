@@ -17,12 +17,16 @@ public class GridManager : MonoSingelton<GridManager>
     }
 
     [Header("Path")]
-    private GridTile[,] gridTiles;
+    GridTile[,] gridTiles;
     public GridTile[,] GridTiles
     {
         get { return gridTiles; }
     }
-    private List<Vector2Int> path = new List<Vector2Int>();
+    List<Vector2Int> path = new List<Vector2Int>();
+    public List<Vector2Int> Path
+    {
+        get { return path; }
+    }
     [SerializeField] private Color pathColor = new Color(0.5f, 0.25f, 0f);
 
     void Start()

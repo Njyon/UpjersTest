@@ -21,15 +21,15 @@ public class GameManager : MonoSingelton<GameManager>
     [SerializeField] SerializedDictionary<CurrencyType, ScriptableCurrency> currencys;
      
 
-    ResourceAccountent resourceAccountent;
-    public ResourceAccountent ResourceAccountent
+    ResourceAccountent resourceAccountant;
+    public ResourceAccountent ResourceAccountant
     {
-        get { return resourceAccountent; }
+        get { return resourceAccountant; }
     }
 
     void Start()
     {
-        resourceAccountent = new ResourceAccountent(50, ResourceGetter, currencys);
+        resourceAccountant = new ResourceAccountent(50, ResourceGetter, currencys);
 
         health = new ResourceBase(maxHealth, maxHealth);
         health.onCurrentValueChange += HealthValueChanged;

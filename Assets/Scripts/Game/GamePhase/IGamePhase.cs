@@ -4,7 +4,7 @@ using UnityEngine;
 public enum GamePhaseType
 {
     Unknown,
-    Build,
+    Building,
     Combat,
     Defeat
 }

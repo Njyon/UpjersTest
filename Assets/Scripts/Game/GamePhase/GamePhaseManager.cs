@@ -7,7 +7,7 @@ public class GamePhaseManager : MonoBehaviour
 
     void Start()
     {
-        StartPhase(GamePhaseType.Build);
+        StartPhase(GamePhaseType.Building);
     }
 
     void Update()
@@ -49,7 +49,7 @@ public class GamePhaseManager : MonoBehaviour
         IGamePhase phase = null;    
         switch (type)
         {
-            case GamePhaseType.Build:
+            case GamePhaseType.Building:
                 phase = new BuildingPhase();
                 break;
             case GamePhaseType.Combat:

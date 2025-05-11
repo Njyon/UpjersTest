@@ -8,22 +8,28 @@ public class BuildingPhase : IGamePhase, IRequestOwner
 {
     public event Action<GamePhaseType> OnPhaseComplete;
     SelectorPanelElement selectorPanel;
+    UIManager uiManager;
+    SelectionManager selectionManager;
 
     public void EnterPhase()
     {
-        UIManager.Instance.BuildingPhaseObj.SetActive(true);
-        UIManager.Instance.buildingButton.onClick.AddListener(OnBuildButtonClicked);
-        UIManager.Instance.startButton.onClick.AddListener(OnStartButtonClicked);
-        SelectionManager.Instance.selectionEvent.AddListener(OnNewSelect);
+        uiManager = UIManager.Instance;
+        selectionManager = SelectionManager.Instance;
+
+        uiManager?.BuildingPhaseObj.SetActive(true);
+        uiManager?.buildingButton.onClick.AddListener(OnBuildButtonClicked);
+        uiManager?.startButton.onClick.AddListener(OnStartButtonClicked);
+        selectionManager?.selectionEvent.AddListener(OnNewSelect);
     }
 
     public void ExitPhase()
     {
-        SelectionManager.Instance.selectionEvent.RemoveListener(OnNewSelect);
-        UIManager.Instance.startButton.onClick.RemoveListener(OnStartButtonClicked);
-        UIManager.Instance.buildingButton.onClick.RemoveListener(OnBuildButtonClicked);
-        UIManager.Instance.BuildingPhaseObj.SetActive(false);
-    }
+        selectionManager?.selectionEvent.RemoveListener(OnNewSelect);
+        uiManager?.startButton.onClick.RemoveListener(OnStartButtonClicked);
+        uiManager?.buildingButton.onClick.RemoveListener(OnBuildButtonClicked);
+        uiManager?.BuildingPhaseObj.SetActive(false);
+        if (selectorPanel != null) uiManager?.UnselectSelectorPanel(selectorPanel);
+    }   
 
     public void UpdatePhase(float deltaTime)
     {
@@ -64,24 +70,24 @@ public class BuildingPhase : IGamePhase, IRequestOwner
             }
         }
 
-        if (goldCost > GameManager.Instance.ResourceAccountent.CurrentResourceAmount(CurrencyType.Gold) || healthCost > GameManager.Instance.ResourceAccountent.CurrentResourceAmount(CurrencyType.Health))
+        if (goldCost > GameManager.Instance.ResourceAccountant.CurrentResourceAmount(CurrencyType.Gold) || healthCost > GameManager.Instance.ResourceAccountant.CurrentResourceAmount(CurrencyType.Health))
         {
             Ultra.Utilities.Instance.DebugLogOnScreen(Ultra.Utilities.Instance.DebugLogString("BuildingPhase", "QueueRequest", "Not enough Currency to request Action!"));
             return;
         }
 
-        GameManager.Instance.ResourceAccountent.AddTransaction(currencyTransaction);
+        GameManager.Instance.ResourceAccountant.AddTransaction(currencyTransaction);
 
         foreach (ARequest request in requestTransaction.requests)
         {
             request.ExecuteRequest(this);
         }
 
-        UIManager.Instance.UnselectSelectorPanel(selectorPanel);
+        uiManager?.UnselectSelectorPanel(selectorPanel);
     }
 
     public void OnNewSelect(List<ISelectable> newSelection, List<ISelectable> oldSelection)
     {
-        UIManager.Instance.UnselectSelectorPanel(selectorPanel);
+        uiManager?.UnselectSelectorPanel(selectorPanel);
     }
 }

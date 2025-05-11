@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91d5f9fc340414649b018c0d209b080f, type: 3}
+  m_Name: Enemy03Data
+  m_EditorClassIdentifier: 
+  aprefab: {fileID: 7509220986236345504, guid: 61c1f4b1b9503494e8302850e91f2643, type: 3}
+  baseHealth: 70
+  speed: 1
+  reward: 100
+  icon: {fileID: 21300000, guid: 6270d46c6c1104b448fb5bac5bede74d, type: 3}
