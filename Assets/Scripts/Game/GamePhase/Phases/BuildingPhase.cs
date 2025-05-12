@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using UltEvents;
 using UnityEngine;
-using static UnityEngine.Rendering.DebugUI;
 
 public class BuildingPhase : IGamePhase, IRequestOwner
 {
@@ -16,7 +15,7 @@ public class BuildingPhase : IGamePhase, IRequestOwner
         uiManager = UIManager.Instance;
         selectionManager = SelectionManager.Instance;
 
-        uiManager?.BuildingPhaseObj.SetActive(true);
+        uiManager?.buildingPhaseObj.SetActive(true);
         uiManager?.buildingButton.onClick.AddListener(OnBuildButtonClicked);
         uiManager?.startButton.onClick.AddListener(OnStartButtonClicked);
         selectionManager?.selectionEvent.AddListener(OnNewSelect);
@@ -24,10 +23,16 @@ public class BuildingPhase : IGamePhase, IRequestOwner
 
     public void ExitPhase()
     {
-        selectionManager?.selectionEvent.RemoveListener(OnNewSelect);
-        uiManager?.startButton.onClick.RemoveListener(OnStartButtonClicked);
-        uiManager?.buildingButton.onClick.RemoveListener(OnBuildButtonClicked);
-        uiManager?.BuildingPhaseObj.SetActive(false);
+        if (selectionManager != null)
+            if (selectionManager.selectionEvent != null)
+                selectionManager?.selectionEvent.RemoveListener(OnNewSelect);
+        if (uiManager != null)
+        {
+            if (uiManager.startButton != null) uiManager.startButton.onClick.RemoveListener(OnStartButtonClicked);
+            if (uiManager.buildingButton != null) uiManager.buildingButton.onClick.RemoveListener(OnBuildButtonClicked);
+            if (uiManager.buildingPhaseObj != null) uiManager.buildingPhaseObj.SetActive(false);
+        }
+     
         if (selectorPanel != null) uiManager?.UnselectSelectorPanel(selectorPanel);
     }   
 
@@ -38,6 +43,7 @@ public class BuildingPhase : IGamePhase, IRequestOwner
 
     void OnBuildButtonClicked()
     {
+        uiManager?.buildingPhaseObj.SetActive(false);
         UIManager.Instance.CreateSelectorPanelForRequests(GameManager.Instance.possibleBuildingRequests, out selectorPanel, this);
     }
 
@@ -89,5 +95,6 @@ public class BuildingPhase : IGamePhase, IRequestOwner
     public void OnNewSelect(List<ISelectable> newSelection, List<ISelectable> oldSelection)
     {
         uiManager?.UnselectSelectorPanel(selectorPanel);
+        uiManager?.buildingPhaseObj.SetActive(true);
     }
 }

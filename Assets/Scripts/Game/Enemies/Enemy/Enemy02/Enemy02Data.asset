@@ -12,8 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 91d5f9fc340414649b018c0d209b080f, type: 3}
   m_Name: Enemy02Data
   m_EditorClassIdentifier: 
-  aprefab: {fileID: 5632054481831961052, guid: 049814d6507e4b2498db9d8a319efabf, type: 3}
+  prefab: {fileID: 5632054481831961052, guid: 049814d6507e4b2498db9d8a319efabf, type: 3}
   baseHealth: 150
   speed: 1.5
   reward: 75
+  damage: 2
   icon: {fileID: 21300000, guid: a332f9cc2040f6042a04c65fa9e4a000, type: 3}

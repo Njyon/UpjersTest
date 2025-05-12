@@ -81,6 +81,7 @@ public class PlayerCameraController : MonoBehaviour
     void MousePos(Vector2 mousePos)
     {
         //CameraMoveScript.MoveCamera(mousePos);
+        PlayerSelection.TryToHover(mousePos);
     }
 
     void Interact(Vector2 interactPos)

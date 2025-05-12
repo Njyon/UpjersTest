@@ -19,6 +19,9 @@ public class GameManager : MonoSingelton<GameManager>
     [Header("ScriptableCurrencys")]
     [SerializedDictionary("CurrencyType", "ScriptableCurrency")]
     [SerializeField] SerializedDictionary<CurrencyType, ScriptableCurrency> currencys;
+
+    [Header("FastForwardToggle")]
+    public float fastForwardSpeed = 2;
      
 
     ResourceAccountent resourceAccountant;

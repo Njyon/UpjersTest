@@ -4,13 +4,20 @@ using UnityEngine;
 
 public abstract class AEnemy : MonoBehaviour 
 {
-    [SerializeField] float spawnHight;
-    int currentPathIndex;
-    ResourceBase health;
-    float movementSpeed;
-    Action<AEnemy> onEnemyDied;
+    [SerializeField] protected float spawnHight;
+    protected int currentPathIndex;
+    protected ResourceBase health;
+    protected float movementSpeed;
+    protected Action<AEnemy> onEnemyDied;
+    protected Action<AEnemy> reachedTarget;
+    protected Vector3 movementTarget;
+    protected int damage;
+    public int Damage
+    {
+        get { return damage; }
+    }
 
-    public virtual void Init(float healthAmount, float speed, Action<AEnemy> onEnemyDied)
+    public virtual void Init(float healthAmount, float speed, int damage, Action<AEnemy> onEnemyDied, Action<AEnemy> reachedTarget)
     {
         // Set Current to last
         currentPathIndex = GridManager.Instance.Path.Count - 1;
@@ -21,10 +28,14 @@ public abstract class AEnemy : MonoBehaviour
 
         health = new ResourceBase(healthAmount, healthAmount);
         movementSpeed = speed;
+        this.damage = damage;
 
         health.onCurrentValueChange += OnHealthValueChange;
 
         this.onEnemyDied = onEnemyDied;
+        this.reachedTarget = reachedTarget;
+        // Set currentPathIndex to next tile
+        currentPathIndex--;
     }
 
     void OnDestroy()
@@ -38,5 +49,10 @@ public abstract class AEnemy : MonoBehaviour
         {
             if (onEnemyDied != null) onEnemyDied.Invoke(this);
         }
+    }
+
+    public virtual float GetPathProgress() 
+    {
+        return 0;
     }
 }

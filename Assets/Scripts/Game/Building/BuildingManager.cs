@@ -9,6 +9,7 @@ public class BuildingManager : MonoSingelton<BuildingManager>
     Tower cachedBuildingTower;
     Vector2Int cachedTowerSize;
     GridTile cachedHitGridTile = null;
+    string towerNameFlag = "Try Building ";
 
     bool TryingToBuild
     {
@@ -36,7 +37,7 @@ public class BuildingManager : MonoSingelton<BuildingManager>
     public void TryToBuildTower(Tower towerPrefab, Vector2Int towerSize)
     {
         cachedBuildingTower = Instantiate(towerPrefab, worldTransform);
-        cachedBuildingTower.gameObject.name = "Try Building " + cachedBuildingTower.gameObject.name;
+        cachedBuildingTower.gameObject.name = towerNameFlag + cachedBuildingTower.gameObject.name;
         cachedBuildingTower.BuildingState = TowerBuildingState.TryToBuild;
         cachedTowerSize = towerSize;
 
@@ -129,6 +130,11 @@ public class BuildingManager : MonoSingelton<BuildingManager>
 
     void Build()
     {
-
+        if (cachedBuildingTower != null)
+        {
+            cachedBuildingTower.BuildingState = TowerBuildingState.Build;
+            cachedBuildingTower.gameObject.name = cachedBuildingTower.gameObject.name.Substring(towerNameFlag.Length);
+            cachedBuildingTower = null; 
+        }
     }
 }

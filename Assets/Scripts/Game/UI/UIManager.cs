@@ -14,9 +14,14 @@ public class UIManager : MonoSingelton<UIManager>
     [SerializeField] GameObject selectionHolder;
 
     [Header("BuildingPhase")]
-    public GameObject BuildingPhaseObj;
+    public GameObject buildingPhaseObj;
     public Button buildingButton;
     public Button startButton;
+
+
+    [Header("CombatPhase")]
+    public GameObject combatPhaseObj;
+    public Button fastForwardButton;
 
 
     public void CreateSelectorPanelForRequests(List<ScriptableRequest> requests, out SelectorPanelElement selectorPanelElement, IRequestOwner requestOwner)
@@ -55,7 +60,7 @@ public class UIManager : MonoSingelton<UIManager>
             return null;
         }
         ResourceUIElement resourceElement = GameAssets.Instance.UI.ResourceUIElementPool.GetValue();
-        resourceElement.transform.parent = parent;
+        resourceElement.transform.SetParent(parent);
         resourceElement.SavePool(GameAssets.Instance.UI.ResourceUIElementPool);
         return resourceElement;
     }
@@ -68,7 +73,7 @@ public class UIManager : MonoSingelton<UIManager>
             return null;
         }
         RequestUIElement requestElement = GameAssets.Instance.UI.RequestUIElementPool.GetValue();
-        requestElement.transform.parent = parent;
+        requestElement.transform.SetParent(parent);
         requestElement.SavePool(GameAssets.Instance.UI.RequestUIElementPool);
         return requestElement;
     }

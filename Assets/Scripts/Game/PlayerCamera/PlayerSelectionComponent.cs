@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -7,6 +8,29 @@ public class PlayerSelectionComponent
 {
     Camera camera;
     float pointInteractionRayLengh;
+    IHoverable cachedHoverable;
+    IHoverable CachedHoverable
+    {
+        get { return cachedHoverable; }
+        set {
+            if (cachedHoverable == value) return;
+            if (value != null)
+            {
+                if (cachedHoverable != null)
+                {
+                    cachedHoverable.UnHovered();
+                    value.UnHovered();
+                }
+                value.Hovered();
+            }
+            else
+            {
+                if (cachedHoverable != null)
+                    cachedHoverable.UnHovered();
+            }
+            cachedHoverable = value; 
+        }
+    }
 
     public PlayerSelectionComponent(Camera camera, float pointInteractionRayLengh)
     {
@@ -76,5 +100,49 @@ public class PlayerSelectionComponent
         interactable.Select();
     }
 
-    // TODO Rect Selection
+
+    public void TryToHover(Vector2 mousePosition)
+    {
+        GetHoverable(mousePosition, out IHoverable newHoverable);
+        CachedHoverable = newHoverable;
+        //if (cachedHoverable != null)
+        //{
+        //    if (lastHovered != null)
+        //    {
+        //        if (lastHovered != cachedHoverable) 
+        //        {
+        //            lastHovered.UnHovered();
+        //            cachedHoverable.Hovered();
+        //        }
+        //    }
+        //}else
+        //{
+        //    if (lastHovered != null)
+        //    {
+        //        lastHovered.UnHovered();
+        //    }
+        //}
+    }
+
+    private void GetHoverable(Vector2 mousePosition, out IHoverable interactable)
+    {
+        interactable = null;
+
+        if (camera == null)
+        {
+            Debug.Log(Ultra.Utilities.Instance.DebugErrorString("PlayerSelectionComponent", "GetInteractable", "Camera was NULL!"));
+            return;
+        }
+        Ray ray = camera.ScreenPointToRay(mousePosition);
+
+        RaycastHit[] hits = Physics.RaycastAll(ray, pointInteractionRayLengh);
+
+        foreach (var hit in hits)
+        {
+            IHoverable h = hit.collider.GetComponent<IHoverable>();
+            // Check if something is found otherwise it will be likly to return null
+            if (h != null)
+                interactable = h;
+        }
+    }
 }

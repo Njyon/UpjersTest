@@ -672,35 +672,35 @@ namespace Ultra {
 			return angle;
 		}
 
-		public static Vector3 IgnoreAxis(Vector3 dir, EAxis axis)
+		public static Vector3 IgnoreAxis(Vector3 dir, EAxis axis, float ignoreValue = 0)
 		{
 			switch (axis)
 			{
 				case EAxis.X:
-					dir.x = 0;
+					dir.x = ignoreValue;
 					break;	
 				case EAxis.XY: 
-					dir.x = 0;
-					dir.y = 0;
+					dir.x = ignoreValue;
+					dir.y = ignoreValue;
 					break;
 				case EAxis.XZ:
-					dir.x = 0;
-					dir.z = 0;
+					dir.x = ignoreValue;
+					dir.z = ignoreValue;
 					break;
 				case EAxis.XYZ:
-					dir.x = 0;
-					dir.y = 0;
-					dir.z = 0;
+					dir.x = ignoreValue;
+					dir.y = ignoreValue;
+					dir.z = ignoreValue;
 					break;
 				case EAxis.Y:
-					dir.y = 0;
+					dir.y = ignoreValue;
 					break; 
 				case EAxis.YZ:
-					dir.y = 0;
-					dir.z = 0;
+					dir.y = ignoreValue;
+					dir.z = ignoreValue;
 					break;
 				case EAxis.Z:
-					dir.z = 0;
+					dir.z = ignoreValue;
 					break;
 				default: return dir;
 			}

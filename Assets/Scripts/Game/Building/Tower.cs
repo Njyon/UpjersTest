@@ -3,17 +3,39 @@ using UnityEngine;
 
 public enum TowerBuildingState
 {
+    Unkown,
     TryToBuild,
     Blocked,
     Build
 }
 
-public class Tower : MonoBehaviour
+public enum TowerState
+{
+    DoNothing,
+    Attack
+}
+
+public class Tower : MonoBehaviour, IHoverable
 {
     // Serialized for debugging in runtime
     [SerializeField] List<Material> materials;
-    [SerializeField] Color buildingColor;
-    [SerializeField] Color cantBuildColor;
+    public Color buildingColor;
+    public Color cantBuildColor;
+    [SerializeField] ColliderScript towerCollider;
+    [SerializeField] MeshRenderer towerRangeVisulizer;
+    [SerializeField] float towerRange;
+    [SerializeField] float checkForFurthestEnemyUpdateTime = 0.1f;
+    [SerializeField] float attackSpeed;
+
+    TowerVisualizerComponent visualizerComponent;
+    Ultra.Timer checkForFurthestEnemyTimer;
+    Ultra.Timer attackTimer;
+    AEnemy attackingTarget;
+
+    List<AEnemy> enemiesInRange;
+
+    [SerializeReference, SubclassSelector]
+    public AAttackLogic attackLogic;
 
     TowerBuildingState buildingState;
     public TowerBuildingState BuildingState
@@ -25,15 +47,16 @@ public class Tower : MonoBehaviour
             {
                 case TowerBuildingState.TryToBuild:
                     if (buildingState != value)
-                        MakeTowerTransparent();
+                        visualizerComponent.MakeTowerTransparent();
                     break;
                 case TowerBuildingState.Blocked:
                     if (buildingState != value)
-                        MakeTowerTileIsBlockedColor();
+                        visualizerComponent.MakeTowerTileIsBlockedColor();
                     break;
                 case TowerBuildingState.Build:
                     if (buildingState != value)
-                        ResetColor();
+                        visualizerComponent.ResetColor();
+                        towerRangeVisulizer.enabled = false;
                     break;
                 default:
                     Ultra.Utilities.Instance.DebugErrorString("Tower", "BuildingState", "BuildingState not Implemented");
@@ -44,51 +67,157 @@ public class Tower : MonoBehaviour
         }
     }
 
-    void Awake()
+    TowerState towerState;
+    public TowerState TowerState
     {
-        ChacheMaterials();
+        get { return towerState; }
+        set
+        {
+            switch (value)
+            {
+                case TowerState.DoNothing:
+                    StopAttacking();
+                    break;
+                case TowerState.Attack:
+                    StartAttacking();
+                    break;
+                default:
+                    break;
+            }
+            towerState = value;
+        }
     }
 
-    void ChacheMaterials()
+    void Awake()
     {
-        materials.Clear();
+        visualizerComponent = new TowerVisualizerComponent(this);
+        checkForFurthestEnemyTimer = new Ultra.Timer(checkForFurthestEnemyUpdateTime);
+        attackTimer = new Ultra.Timer(attackSpeed);
+        checkForFurthestEnemyTimer.onTimerFinished += OncheckForFurthestEnemyTimerFinished;
+        attackTimer.onTimerFinished += OnAttackTimerFinished;
 
-        Renderer[] renderers = GetComponentsInChildren<Renderer>();
+        visualizerComponent.ChacheMaterials();
 
-        foreach (Renderer renderer in renderers)
+        towerCollider.gameObject.transform.localScale = new Vector3(towerRange, towerCollider.gameObject.transform.localScale.y, towerRange);
+        enemiesInRange = new List<AEnemy>();
+        towerCollider.onOverlapEnter += OnTowerColliderOverlapEnter;
+        towerCollider.onOverlapExit += OnTowerColliderOverlapExit;
+    }
+
+    void Update()
+    {
+        if (checkForFurthestEnemyTimer != null) checkForFurthestEnemyTimer.Update(Time.deltaTime);
+        if (attackTimer != null) attackTimer.Update(Time.deltaTime);
+    }
+
+    private void OnDestroy()
+    {
+        if (towerCollider != null)
         {
-            foreach (Material mat in renderer.materials)
+            towerCollider.onOverlapEnter -= OnTowerColliderOverlapEnter;
+            towerCollider.onOverlapExit -= OnTowerColliderOverlapExit;
+        }
+        if (checkForFurthestEnemyTimer != null)
+            checkForFurthestEnemyTimer.onTimerFinished -= OncheckForFurthestEnemyTimerFinished;
+        if (attackTimer != null)
+            attackTimer.onTimerFinished -= OnAttackTimerFinished;
+
+
+    }
+
+    void OnTowerColliderOverlapEnter(Collider other)
+    {
+        if (other != null)
+        {
+            AEnemy enemy = other.GetComponent<AEnemy>();
+            if (enemy != null)
             {
-                if (mat != null && !materials.Contains(mat))
+                enemiesInRange.Add(enemy);
+                towerState = TowerState.Attack;
+            }
+        } 
+    }
+
+    void OnTowerColliderOverlapExit(Collider other)
+    {
+        if (other != null)
+        {
+            AEnemy enemy = other.GetComponent<AEnemy>();
+            if (enemy != null)
+            {
+                enemiesInRange.Remove(enemy);
+                UpdateAttackingTarget();
+                if (enemiesInRange.Count <= 0)
                 {
-                    materials.Add(mat);
+                    towerState = TowerState.DoNothing;
                 }
             }
         }
     }
 
-    // Needed for building for clearer behaviour
-    public void MakeTowerTransparent()
+    void OncheckForFurthestEnemyTimerFinished()
     {
-        foreach (Material material in materials) 
-        { 
-            material.SetColor("_BaseColor", buildingColor);
+        UpdateAttackingTarget();
+        checkForFurthestEnemyTimer.Start();
+    }
+
+    void OnAttackTimerFinished()
+    {
+        AttackTarget();
+        attackTimer.Start();
+    }
+
+    void StartAttacking()
+    {
+        UpdateAttackingTarget();
+        checkForFurthestEnemyTimer.Start();
+
+        AttackTarget();
+        attackTimer.Start();
+    }
+
+    void UpdateAttackingTarget()
+    {
+        float progress = 9999;
+        foreach (AEnemy enemy in enemiesInRange)
+        {
+            float enemyProgress = enemy.GetPathProgress();
+            if (enemyProgress <= progress)
+            {
+                progress = enemyProgress;
+                attackingTarget = enemy;
+            }
         }
     }
 
-    public void MakeTowerTileIsBlockedColor()
+    void StopAttacking()
     {
-        foreach (Material material in materials)
+        checkForFurthestEnemyTimer.Stop();
+        attackTimer.Stop();
+        attackingTarget = null;
+    }
+
+    protected virtual void AttackTarget()
+    {
+        if (attackingTarget != null)
         {
-            material.SetColor("_BaseColor", cantBuildColor);
+
         }
     }
 
-    public void ResetColor()
+    public void Hovered()
     {
-        foreach (Material material in materials)
+        if (buildingState == TowerBuildingState.Build)
         {
-            material.SetColor("_BaseColor", Color.white);
+            towerRangeVisulizer.enabled = true;
+        }
+    }
+
+    public void UnHovered()
+    {
+        if (buildingState == TowerBuildingState.Build)
+        {
+            towerRangeVisulizer.enabled = false;
         }
     }
 }
