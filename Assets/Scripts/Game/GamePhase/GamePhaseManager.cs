@@ -58,6 +58,9 @@ public class GamePhaseManager : MonoBehaviour
             case GamePhaseType.Defeat:
                 phase = new DefeatPhase();
                 break;
+            case GamePhaseType.Restart:
+                phase = new RestartPhase();
+                break;
             default:
                 Debug.LogError("GamePhaseType was invalid or not Implemented!");
                 break;

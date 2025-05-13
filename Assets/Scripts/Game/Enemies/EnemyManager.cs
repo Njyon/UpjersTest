@@ -12,6 +12,12 @@ public class EnemyManager : MonoSingelton<EnemyManager>
     public int CurrentWave
     {
         get { return currentWave; }
+        set
+        {
+            int oldValue = currentWave;
+            currentWave = value;
+            CurrentWaveAmountChanged(currentWave, oldValue);   
+        }
     }
     int waveDataUsage;
 
@@ -33,6 +39,9 @@ public class EnemyManager : MonoSingelton<EnemyManager>
         currentlyAliveEnemies = new List<AEnemy>();
         waveSpawnTimer = new Ultra.Timer();
         waveSpawnTimer.onTimerFinished += OnWaveSpawnTimerFinished;
+
+        // Init the Text Data
+        CurrentWaveAmountChanged(currentWave, 0);
     }
 
     private void OnDestroy()
@@ -62,12 +71,10 @@ public class EnemyManager : MonoSingelton<EnemyManager>
             return;
         }
 
-        toBeSpawnedWave = waveData.spawnLogic.ToSpawn(waveData, currentWave, waveDataUsage);
+        toBeSpawnedWave = currentWaveData.spawnLogic.ToSpawn(currentWaveData, currentWave, waveDataUsage);
         toBeSpawnedWaveIndex = 0;
 
         SpawnEnemey();
-
-        currentWave++;
     }
 
     void SpawnEnemey()
@@ -77,7 +84,9 @@ public class EnemyManager : MonoSingelton<EnemyManager>
             EnemyData toBeSpawnedEnemyData = toBeSpawnedWave.enemiesToSpawn[toBeSpawnedWaveIndex];
             AEnemy enemyToSpawn = toBeSpawnedEnemyData.prefab;
             AEnemy spawnedEnemy = GameObject.Instantiate(enemyToSpawn, enemyHolder);
-            spawnedEnemy.Init(toBeSpawnedEnemyData.baseHealth, toBeSpawnedEnemyData.speed, toBeSpawnedEnemyData.damage, OnEnemyDied, OnEnemyReachedTarget);
+            spawnedEnemy.Init(toBeSpawnedEnemyData.baseHealth, toBeSpawnedEnemyData.speed, toBeSpawnedEnemyData.damage, toBeSpawnedEnemyData.reward);
+            spawnedEnemy.onEnemyDied += OnEnemyDied;
+            spawnedEnemy.reachedTarget += OnEnemyReachedTarget;
 
             currentlyAliveEnemies.Add(spawnedEnemy);
             waveSpawnTimer.Start(toBeSpawnedWave.spawnDelay);
@@ -92,23 +101,38 @@ public class EnemyManager : MonoSingelton<EnemyManager>
 
     void OnEnemyDied(AEnemy enemy)
     {
+        enemy.onEnemyDied -= OnEnemyDied;
+        enemy.reachedTarget -= OnEnemyReachedTarget;
         currentlyAliveEnemies.Remove(enemy);
+        Destroy(enemy.gameObject);
         CheckIfAllEnemiesAreDead();
     }
 
+    /// <summary>
+    /// Check if All Enemys are dead and if no enemy is supposed to spawn
+    /// </summary>
     void CheckIfAllEnemiesAreDead()
     {
-        if (currentlyAliveEnemies.Count <= 0)
+        if (currentlyAliveEnemies.Count <= 0 && toBeSpawnedWaveIndex >= toBeSpawnedWave.enemiesToSpawn.Count)
         {
-            if (AllEnemiesDied != null) AllEnemiesDied();
+            if (AllEnemiesDied != null)
+                AllEnemiesDied();
+            if (GameManager.Instance.ResourceAccountant.CurrentResourceAmount(CurrencyType.Health) > 0) CurrentWave++;
         }
     }
 
     void OnEnemyReachedTarget(AEnemy enemy)
     {
-        GameManager.Instance.ResourceAccountant.ChangeCurrentResourceValue(CurrencyType.Health, -enemy.Damage);
+        GameManager.Instance.ResourceAccountant.AddCurrentResourceValue(CurrencyType.Health, -enemy.Damage);
+        enemy.onEnemyDied -= OnEnemyDied;
+        enemy.reachedTarget -= OnEnemyReachedTarget;
         currentlyAliveEnemies.Remove(enemy);
         CheckIfAllEnemiesAreDead();
         Destroy(enemy.gameObject);
+    }
+
+    void CurrentWaveAmountChanged(int newValue, int oldValue)
+    {
+        UIManager.Instance.currentWaveCount.text = newValue.ToString();
     }
 }

@@ -1,25 +1,12 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-//[RequireComponent(typeof(CameraMoveScript))]
 [RequireComponent(typeof(Camera))]
 public class PlayerCameraController : MonoBehaviour
 {
     InputSystem_Actions playerInputs;
 
     [Header("Components")]//////////////////////////////////////////////////
-
-    //[SerializeField] CameraMoveScript cameraMoveScript;
-    //public CameraMoveScript CameraMoveScript
-    //{
-    //    get
-    //    {
-    //        if (cameraMoveScript == null)
-    //            cameraMoveScript = GetComponent<CameraMoveScript>();
-    //        return cameraMoveScript;
-    //    }
-    //}
-
     [SerializeField] Camera playerCamera;
     public Camera PlayerCamera
     {
@@ -67,8 +54,8 @@ public class PlayerCameraController : MonoBehaviour
         playerInputs.Player.DebugLevelDown.performed += ctx => DebugDown();
 
         /// Player Actions ///
-        //playerInputs.Player.MouseMove.performed += ctx => MousePos(ctx.ReadValue<Vector2>());
         playerInputs.Player.Interact.performed += ctx => Interact(Input.mousePosition);
+        playerInputs.Player.ContextAction.performed += ctx => ContextAction(Input.mousePosition);
 
         Cursor.lockState = CursorLockMode.Confined;
     }
@@ -80,7 +67,6 @@ public class PlayerCameraController : MonoBehaviour
 
     void MousePos(Vector2 mousePos)
     {
-        //CameraMoveScript.MoveCamera(mousePos);
         PlayerSelection.TryToHover(mousePos);
     }
 
@@ -89,6 +75,10 @@ public class PlayerCameraController : MonoBehaviour
         PlayerSelection.PointSelection(interactPos);
     }
 
+    void ContextAction(Vector2 interactPos)
+    {
+        PlayerSelection.ContextAction(interactPos);
+    }
 
     //////////////////// DEBUG //////////////////////////
 

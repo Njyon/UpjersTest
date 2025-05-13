@@ -5,13 +5,33 @@ using UnityEngine;
 public class SelectionManager : MonoSingelton<SelectionManager>
 {
     public UltEvents.UltEvent<List<ISelectable>, List<ISelectable>> selectionEvent = new UltEvents.UltEvent<List<ISelectable>, List<ISelectable>>();
+    public UltEvents.UltEvent<IContextAction, IContextAction> contextEvent = new UltEvents.UltEvent<IContextAction, IContextAction>();
 
     List<ISelectable> currentlySelectedObjects = new List<ISelectable>();
+    IContextAction currentContext;
 
     public void Select(ISelectable selection)
     {
         List<ISelectable> tempList = new List<ISelectable> { selection };
         Select(tempList);
+    }
+
+    public void OpenContext(IContextAction context)
+    {
+        if (currentContext != null)
+        {
+            currentContext.Close();
+        }
+
+        IContextAction lastContext = currentContext;
+        currentContext = context;
+
+        if (currentContext != null)
+        {
+            currentContext.Action();
+        }
+
+        if (contextEvent != null) contextEvent.Invoke(currentContext, lastContext);
     }
 
     public void Select(List<ISelectable> selection)
@@ -39,6 +59,6 @@ public class SelectionManager : MonoSingelton<SelectionManager>
             selectable.Select();
         }
 
-        selectionEvent.Invoke(currentlySelectedObjects, lastSelection);
+        if (selectionEvent != null) selectionEvent.Invoke(currentlySelectedObjects, lastSelection);
     }
 }

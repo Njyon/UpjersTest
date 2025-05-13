@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UltEvents;
 using UnityEngine;
 
@@ -9,23 +10,31 @@ public class BuildingPhase : IGamePhase, IRequestOwner
     SelectorPanelElement selectorPanel;
     UIManager uiManager;
     SelectionManager selectionManager;
+    BuildingManager buildingManager;
 
     public void EnterPhase()
     {
         uiManager = UIManager.Instance;
         selectionManager = SelectionManager.Instance;
+        buildingManager = BuildingManager.Instance;
 
-        uiManager?.buildingPhaseObj.SetActive(true);
-        uiManager?.buildingButton.onClick.AddListener(OnBuildButtonClicked);
-        uiManager?.startButton.onClick.AddListener(OnStartButtonClicked);
-        selectionManager?.selectionEvent.AddListener(OnNewSelect);
+        uiManager.buildingPhaseObj.SetActive(true);
+        uiManager.buildingButton.onClick.AddListener(OnBuildButtonClicked);
+        uiManager.startButton.onClick.AddListener(OnStartButtonClicked);
+        selectionManager.selectionEvent.AddListener(OnNewSelect);
+        buildingManager.cancleBuild += OnCancleBuild;
     }
 
     public void ExitPhase()
     {
+        if (buildingManager != null)
+            buildingManager.cancleBuild -= OnCancleBuild;
+
         if (selectionManager != null)
-            if (selectionManager.selectionEvent != null)
-                selectionManager?.selectionEvent.RemoveListener(OnNewSelect);
+        {
+            if (selectionManager.contextEvent != null) selectionManager.contextEvent.RemoveListener(OnOpenContext);
+            if (selectionManager.selectionEvent != null) selectionManager.selectionEvent.RemoveListener(OnNewSelect);
+        }
         if (uiManager != null)
         {
             if (uiManager.startButton != null) uiManager.startButton.onClick.RemoveListener(OnStartButtonClicked);
@@ -43,8 +52,15 @@ public class BuildingPhase : IGamePhase, IRequestOwner
 
     void OnBuildButtonClicked()
     {
+        OpenPanel();
+    }
+
+    void OpenPanel()
+    {
         uiManager?.buildingPhaseObj.SetActive(false);
         UIManager.Instance.CreateSelectorPanelForRequests(GameManager.Instance.possibleBuildingRequests, out selectorPanel, this);
+        //await new WaitForEndOfFrame();  // Fast Fix but iam to lasy to implement a correct UI Pattern
+        selectionManager.contextEvent.AddListener(OnOpenContext);
     }
 
     void OnStartButtonClicked() 
@@ -63,13 +79,17 @@ public class BuildingPhase : IGamePhase, IRequestOwner
             switch (cost.Currency.CurrencyTyp)
             {
                 case CurrencyType.Gold:
-                    goldCost += cost.Cost;
-                    currencyTransaction.Costs.Add(cost);
-                    break;
+                    {
+                        goldCost += cost.Cost;
+                        SRequestCost rc = CreateCostWithNegativeAmount(cost);
+                        currencyTransaction.Costs.Add(rc);
+                    } break;
                 case CurrencyType.Health:
-                    healthCost += cost.Cost;
-                    currencyTransaction.Costs.Add(cost);
-                    break;
+                    {
+                        healthCost += cost.Cost;
+                        SRequestCost rc = CreateCostWithNegativeAmount(cost);
+                        currencyTransaction.Costs.Add(rc);
+                    } break;
                 default:
                     Ultra.Utilities.Instance.DebugErrorString("BuildingPhase", "QueueRequest", "CurrencyType not implemented or UNKNOWN!");
                     break;
@@ -89,12 +109,40 @@ public class BuildingPhase : IGamePhase, IRequestOwner
             request.ExecuteRequest(this);
         }
 
-        uiManager?.UnselectSelectorPanel(selectorPanel);
+        DeselectSelectorPanel();
+    }
+
+    private static SRequestCost CreateCostWithNegativeAmount(SRequestCost cost)
+    {
+        SRequestCost rc = new SRequestCost();
+        rc.Cost = -cost.Cost;
+        rc.Currency = cost.Currency;
+        rc.FormatCostString = cost.FormatCostString;
+        return rc;
     }
 
     public void OnNewSelect(List<ISelectable> newSelection, List<ISelectable> oldSelection)
     {
-        uiManager?.UnselectSelectorPanel(selectorPanel);
-        uiManager?.buildingPhaseObj.SetActive(true);
+        DeselectSelectorPanel();
+    }
+
+    void DeselectSelectorPanel()
+    {
+        if (selectionManager != null)
+        {
+            if (selectionManager.contextEvent != null) selectionManager.contextEvent.RemoveListener(OnOpenContext);
+            uiManager?.UnselectSelectorPanel(selectorPanel);
+            uiManager?.buildingPhaseObj.SetActive(true);
+        }
+    }
+
+    void OnCancleBuild()
+    {
+        OpenPanel();
+    }
+
+    void OnOpenContext(IContextAction newContext, IContextAction oldContext)
+    {
+        DeselectSelectorPanel();
     }
 }

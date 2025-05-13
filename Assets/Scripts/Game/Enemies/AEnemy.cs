@@ -8,16 +8,17 @@ public abstract class AEnemy : MonoBehaviour
     protected int currentPathIndex;
     protected ResourceBase health;
     protected float movementSpeed;
-    protected Action<AEnemy> onEnemyDied;
-    protected Action<AEnemy> reachedTarget;
+    public Action<AEnemy> onEnemyDied;
+    public Action<AEnemy> reachedTarget;
     protected Vector3 movementTarget;
     protected int damage;
+    protected int reward;
     public int Damage
     {
         get { return damage; }
     }
 
-    public virtual void Init(float healthAmount, float speed, int damage, Action<AEnemy> onEnemyDied, Action<AEnemy> reachedTarget)
+    public virtual void Init(float healthAmount, float speed, int damage, int reward)
     {
         // Set Current to last
         currentPathIndex = GridManager.Instance.Path.Count - 1;
@@ -29,13 +30,16 @@ public abstract class AEnemy : MonoBehaviour
         health = new ResourceBase(healthAmount, healthAmount);
         movementSpeed = speed;
         this.damage = damage;
+        this.reward = reward;
 
         health.onCurrentValueChange += OnHealthValueChange;
-
-        this.onEnemyDied = onEnemyDied;
-        this.reachedTarget = reachedTarget;
         // Set currentPathIndex to next tile
         currentPathIndex--;
+    }
+
+    protected virtual void Update()
+    {
+        Move();
     }
 
     void OnDestroy()
@@ -47,6 +51,7 @@ public abstract class AEnemy : MonoBehaviour
     {
         if (newValue <= 0)
         {
+            GameManager.Instance.ResourceAccountant.AddCurrentResourceValue(CurrencyType.Gold, reward);
             if (onEnemyDied != null) onEnemyDied.Invoke(this);
         }
     }
@@ -54,5 +59,12 @@ public abstract class AEnemy : MonoBehaviour
     public virtual float GetPathProgress() 
     {
         return 0;
+    }
+
+    protected virtual void Move() { }
+
+    public virtual void DoDamage(float damage)
+    {
+        health.AddCurrentValue(-damage);
     }
 }

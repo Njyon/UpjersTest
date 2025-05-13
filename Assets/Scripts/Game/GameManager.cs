@@ -7,11 +7,11 @@ public class GameManager : MonoSingelton<GameManager>
 {
     [Header("PlayerHealth")]
     [SerializeField] int maxHealth;
-    ResourceBase health;
+    public ResourceBase health;
 
     [Header("PlayerGold")]
     [SerializeField] int startGold;
-    ResourceBase gold;
+    public ResourceBase gold;
 
     [Header("TowerOptions")]
     public List<ScriptableRequest> possibleBuildingRequests = new List<ScriptableRequest>();

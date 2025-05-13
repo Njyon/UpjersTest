@@ -6,7 +6,8 @@ public enum GamePhaseType
     Unknown,
     Building,
     Combat,
-    Defeat
+    Defeat,
+    Restart
 }
 
 public interface IGamePhase

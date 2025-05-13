@@ -10,6 +10,7 @@ public class UIManager : MonoSingelton<UIManager>
 
     public ResourceDisplayer healthVisulizer;
     public ResourceDisplayer goldVisulizer;
+    public TMPro.TextMeshProUGUI currentWaveCount;
 
     [SerializeField] GameObject selectionHolder;
 
@@ -23,6 +24,10 @@ public class UIManager : MonoSingelton<UIManager>
     public GameObject combatPhaseObj;
     public Button fastForwardButton;
 
+    [Header("GameOverPhase")]
+    public GameObject gameOverTextObj;
+    public GameObject gameOverButtonObj;
+    public Button gameOverButton;
 
     public void CreateSelectorPanelForRequests(List<ScriptableRequest> requests, out SelectorPanelElement selectorPanelElement, IRequestOwner requestOwner)
     {

@@ -30,9 +30,8 @@ public class Tower : MonoBehaviour, IHoverable
     TowerVisualizerComponent visualizerComponent;
     Ultra.Timer checkForFurthestEnemyTimer;
     Ultra.Timer attackTimer;
-    AEnemy attackingTarget;
-
-    List<AEnemy> enemiesInRange;
+    [HideInInspector] public AEnemy attackingTarget;
+    [HideInInspector] public List<AEnemy> enemiesInRange;
 
     [SerializeReference, SubclassSelector]
     public AAttackLogic attackLogic;
@@ -102,6 +101,8 @@ public class Tower : MonoBehaviour, IHoverable
         enemiesInRange = new List<AEnemy>();
         towerCollider.onOverlapEnter += OnTowerColliderOverlapEnter;
         towerCollider.onOverlapExit += OnTowerColliderOverlapExit;
+
+        attackLogic.Init(this);
     }
 
     void Update()
@@ -133,7 +134,8 @@ public class Tower : MonoBehaviour, IHoverable
             if (enemy != null)
             {
                 enemiesInRange.Add(enemy);
-                towerState = TowerState.Attack;
+                enemy.onEnemyDied += OnEnemyDied;
+                TowerState = TowerState.Attack;
             }
         } 
     }
@@ -145,6 +147,7 @@ public class Tower : MonoBehaviour, IHoverable
             AEnemy enemy = other.GetComponent<AEnemy>();
             if (enemy != null)
             {
+                enemy.onEnemyDied -= OnEnemyDied;
                 enemiesInRange.Remove(enemy);
                 UpdateAttackingTarget();
                 if (enemiesInRange.Count <= 0)
@@ -169,6 +172,8 @@ public class Tower : MonoBehaviour, IHoverable
 
     void StartAttacking()
     {
+        if (attackTimer.IsRunning) return;
+        
         UpdateAttackingTarget();
         checkForFurthestEnemyTimer.Start();
 
@@ -178,11 +183,11 @@ public class Tower : MonoBehaviour, IHoverable
 
     void UpdateAttackingTarget()
     {
-        float progress = 9999;
+        float progress = -1;
         foreach (AEnemy enemy in enemiesInRange)
         {
             float enemyProgress = enemy.GetPathProgress();
-            if (enemyProgress <= progress)
+            if (enemyProgress > progress)
             {
                 progress = enemyProgress;
                 attackingTarget = enemy;
@@ -201,7 +206,7 @@ public class Tower : MonoBehaviour, IHoverable
     {
         if (attackingTarget != null)
         {
-
+            attackLogic.Attack();
         }
     }
 
@@ -219,5 +224,11 @@ public class Tower : MonoBehaviour, IHoverable
         {
             towerRangeVisulizer.enabled = false;
         }
+    }
+
+    void OnEnemyDied(AEnemy enemy)
+    {
+        enemiesInRange.Remove(enemy);
+        UpdateAttackingTarget();
     }
 }

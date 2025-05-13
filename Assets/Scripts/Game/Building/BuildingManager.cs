@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Ultra;
 using UnityEngine;
@@ -10,6 +11,8 @@ public class BuildingManager : MonoSingelton<BuildingManager>
     Vector2Int cachedTowerSize;
     GridTile cachedHitGridTile = null;
     string towerNameFlag = "Try Building ";
+    SelectionManager selectionManager;
+    public Action cancleBuild;
 
     bool TryingToBuild
     {
@@ -23,14 +26,20 @@ public class BuildingManager : MonoSingelton<BuildingManager>
         }
     }
 
-    void Start()
+    void Awake()
     {
-        SelectionManager.Instance.selectionEvent += OnSelect;
+        selectionManager = SelectionManager.Instance;
+        selectionManager.selectionEvent += OnSelect;
+        selectionManager.contextEvent += OnContextAction;
     }
 
     void OnDestroy()
     {
-        SelectionManager.Instance.selectionEvent -= OnSelect;
+        if (selectionManager != null)
+        {
+            selectionManager.selectionEvent -= OnSelect;
+            selectionManager.contextEvent -= OnContextAction;
+        }
         TryingToBuild = false;
     }
 
@@ -128,6 +137,11 @@ public class BuildingManager : MonoSingelton<BuildingManager>
         }
     }
 
+    void OnContextAction(IContextAction newContext, IContextAction oldContext)
+    {
+        CancleBuild();
+    }
+
     void Build()
     {
         if (cachedBuildingTower != null)
@@ -135,6 +149,19 @@ public class BuildingManager : MonoSingelton<BuildingManager>
             cachedBuildingTower.BuildingState = TowerBuildingState.Build;
             cachedBuildingTower.gameObject.name = cachedBuildingTower.gameObject.name.Substring(towerNameFlag.Length);
             cachedBuildingTower = null; 
+        }
+    }
+
+    void CancleBuild()
+    {
+        if (TryingToBuild && cachedBuildingTower != null)
+        {
+            Destroy(cachedBuildingTower.gameObject);
+            cachedBuildingTower = null;
+            TryingToBuild = false;
+            GameManager.Instance.ResourceAccountant.RemoveLastTransaction();
+
+            if (cancleBuild != null) cancleBuild.Invoke();
         }
     }
 }

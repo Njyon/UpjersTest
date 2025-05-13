@@ -38,7 +38,7 @@ public class ResourceAccountent
         }
     }
 
-    public void ChangeCurrentResourceValue(CurrencyType currencyType, float value) 
+    public void AddCurrentResourceValue(CurrencyType currencyType, float value) 
     {
         Dictionary<CurrencyType, float> dic = new Dictionary<CurrencyType, float>();   
         dic.Add(currencyType, value);
@@ -99,5 +99,10 @@ public class ResourceAccountent
             // invert value
             r.AddCurrentValue(cost.Cost * -1);
         }
+    }
+
+    public void RemoveLastTransaction()
+    {
+        history.UndoLast();
     }
 }

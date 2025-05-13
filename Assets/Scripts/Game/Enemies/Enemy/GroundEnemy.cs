@@ -3,19 +3,14 @@ using UnityEngine;
 
 public abstract class GroundEnemy : AEnemy
 {
-    public override void Init(float healthAmount, float speed, int damage, Action<AEnemy> onEnemyDied, Action<AEnemy> reachedTarget)
+    public override void Init(float healthAmount, float speed, int damage, int reward)
     {
-        base.Init(healthAmount, speed, damage, onEnemyDied, reachedTarget);
+        base.Init(healthAmount, speed, damage, reward);
 
         movementTarget = GridManager.Instance.GridTiles[GridManager.Instance.Path[currentPathIndex].x, GridManager.Instance.Path[currentPathIndex].y].transform.position.IgnoreAxis(EAxis.Y, transform.position.y);
     }
 
-    protected virtual void Update()
-    {
-        Move();
-    }
-
-    public void Move()
+    protected override void Move()
     {
         transform.position = Vector3.MoveTowards(transform.position, movementTarget, movementSpeed * Time.deltaTime);
 

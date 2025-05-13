@@ -49,6 +49,12 @@ public class PlayerSelectionComponent
         SelectionManager.Instance.Select(interactable);
     }
 
+    public void ContextAction(Vector2 selectionPoint)
+    {
+        IContextAction context = GetContext(selectionPoint, pointInteractionRayLengh);
+        SelectionManager.Instance.OpenContext(context);
+    }
+
     ISelectable GetInteractable(Vector2 interactionPoint, float rayLength)
     {
         if (camera == null)
@@ -63,6 +69,29 @@ public class PlayerSelectionComponent
         foreach (var hit in hits)
         {
             ISelectable interactable = hit.collider.GetComponent<ISelectable>();
+            if (interactable != null)
+            {
+                return interactable;
+            }
+        }
+
+        return null;
+    }
+
+    IContextAction GetContext(Vector2 interactionPoint, float rayLength)
+    {
+        if (camera == null)
+        {
+            Debug.Log(Ultra.Utilities.Instance.DebugErrorString("PlayerSelectionComponent", "GetInteractable", "Camera was NULL!"));
+            return null;
+        }
+        Ray ray = camera.ScreenPointToRay(interactionPoint);
+
+        RaycastHit[] hits = Physics.RaycastAll(ray, rayLength);
+
+        foreach (var hit in hits)
+        {
+            IContextAction interactable = hit.collider.GetComponent<IContextAction>();
             if (interactable != null)
             {
                 return interactable;
