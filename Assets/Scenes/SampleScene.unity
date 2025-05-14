@@ -1953,7 +1953,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8304eb0962ca34d4ab6ffe0d995a6881, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHealth: 60
+  maxHealth: 1
   startGold: 200
   possibleBuildingRequests:
   - {fileID: 11400000, guid: e37e773c28a544c45a7bcb11b5420e84, type: 2}
@@ -2669,6 +2669,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   worldTransform: {fileID: 1904173656}
+  cachedTowerPlacedGridTiles: []
 --- !u!4 &1236318963
 Transform:
   m_ObjectHideFlags: 0
@@ -3301,8 +3302,8 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 894787977}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}

@@ -1,7 +1,5 @@
 using System.Collections.Generic;
-using UnityEditor.PackageManager.Requests;
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.UI;
 
 public class RequestUIElement : MonoBehaviour, IUIElement, IUIPoolableUIElement<RequestUIElement>

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -6,7 +7,8 @@ public enum TowerBuildingState
     Unkown,
     TryToBuild,
     Blocked,
-    Build
+    Build,
+    Replace
 }
 
 public enum TowerState
@@ -15,17 +17,19 @@ public enum TowerState
     Attack
 }
 
-public class Tower : MonoBehaviour, IHoverable
+public class Tower : MonoBehaviour, IHoverable, ISelectable, IRequestOwner
 {
     // Serialized for debugging in runtime
     [SerializeField] List<Material> materials;
     public Color buildingColor;
     public Color cantBuildColor;
+    [HideInInspector] public Vector2Int towerSize; 
     [SerializeField] ColliderScript towerCollider;
     [SerializeField] MeshRenderer towerRangeVisulizer;
     [SerializeField] float towerRange;
     [SerializeField] float checkForFurthestEnemyUpdateTime = 0.1f;
     [SerializeField] float attackSpeed;
+    public Vector3 lastPlacedPosition;
 
     TowerVisualizerComponent visualizerComponent;
     Ultra.Timer checkForFurthestEnemyTimer;
@@ -54,9 +58,20 @@ public class Tower : MonoBehaviour, IHoverable
                     break;
                 case TowerBuildingState.Build:
                     if (buildingState != value)
+                    {
                         visualizerComponent.ResetColor();
                         towerRangeVisulizer.enabled = false;
-                    break;
+                        // Only cache when tower gets build the first time, otherwise it would be recached when replaced
+                        if (towerCost == null)
+                            towerCost = GameManager.Instance.ResourceAccountant.GetLastTransaction(); // not safe but good enough for now
+                        CreateTowerRequest();
+                    } break;
+                case TowerBuildingState.Replace:
+                    if (buildingState != value)
+                    {
+                        visualizerComponent.MakeTowerTransparent();
+                        lastPlacedPosition = transform.position;
+                    } break;
                 default:
                     Ultra.Utilities.Instance.DebugErrorString("Tower", "BuildingState", "BuildingState not Implemented");
                     break;
@@ -65,6 +80,8 @@ public class Tower : MonoBehaviour, IHoverable
             buildingState = value;
         }
     }
+
+   
 
     TowerState towerState;
     public TowerState TowerState
@@ -86,6 +103,15 @@ public class Tower : MonoBehaviour, IHoverable
             towerState = value;
         }
     }
+
+    // Should probably be stored in a Prent or somewhere else but good for now
+    CurrencyTransaction towerCost;
+    SelectorPanelElement requestSelectorPanel;
+    [SerializeField] ScriptableRequest scriptableObjectTowerReplace;
+    [SerializeField] ScriptableRequest scriptableObjectTowerSell;
+
+    // Keep visiable for debug
+    public List<GridTile> gridTilesTheTowerIsBuildOn;
 
     void Awake()
     {
@@ -214,7 +240,7 @@ public class Tower : MonoBehaviour, IHoverable
     {
         if (buildingState == TowerBuildingState.Build)
         {
-            towerRangeVisulizer.enabled = true;
+            if (towerRangeVisulizer != null) towerRangeVisulizer.enabled = true;
         }
     }
 
@@ -222,7 +248,7 @@ public class Tower : MonoBehaviour, IHoverable
     {
         if (buildingState == TowerBuildingState.Build)
         {
-            towerRangeVisulizer.enabled = false;
+            if (towerRangeVisulizer != null) towerRangeVisulizer.enabled = false;
         }
     }
 
@@ -230,5 +256,120 @@ public class Tower : MonoBehaviour, IHoverable
     {
         enemiesInRange.Remove(enemy);
         UpdateAttackingTarget();
+    }
+
+    /// <summary>
+    /// Kinda hacky but i dont want to create a new System for this now
+    /// </summary>
+    void CreateTowerRequest()
+    {
+        CreateTowerReplacementRequest();
+        CreateTowerSellRequest();
+    }
+
+    void CreateTowerSellRequest()
+    {
+        ScriptableRequest towerSellSR = ScriptableObject.CreateInstance<ScriptableRequest>();
+        CopyScriptableRequest(ref towerSellSR, scriptableObjectTowerSell);
+        scriptableObjectTowerSell = towerSellSR;
+        SellTowerRequest str = new SellTowerRequest();
+        if (str != null)
+        {
+            str.towerCost = towerCost;
+            str.tower = this;
+            str.Owner = this;
+        }
+        scriptableObjectTowerSell.Requests.Add(str);
+    }
+
+    void CreateTowerReplacementRequest()
+    {
+        ScriptableRequest towerReplaceSR = ScriptableObject.CreateInstance<ScriptableRequest>();
+        CopyScriptableRequest(ref towerReplaceSR, scriptableObjectTowerReplace);
+        scriptableObjectTowerReplace = towerReplaceSR;
+        ReplaceTowerRequest rtr = new ReplaceTowerRequest();
+        if (rtr != null)
+        {
+            rtr.towerToReplace = this;
+            rtr.Owner = this;
+        }
+        scriptableObjectTowerReplace.Requests.Add(rtr);
+    }
+
+    void CopyScriptableRequest(ref ScriptableRequest sr, ScriptableRequest original)
+    {
+        sr.RequestName = original.RequestName;
+        sr.RequestSprite = original.RequestSprite;
+        sr.RequestDescription = original.RequestDescription;
+        sr.Requests = new List<ARequest>();
+        sr.Costs = original.Costs;
+    }
+
+    public void Select()
+    {
+        if (BuildingManager.Instance.TryingToBuild || BuildingManager.Instance.TryingToReplace) return;
+
+        if (buildingState == TowerBuildingState.Build)
+        {
+            List<ScriptableRequest> requests = new List<ScriptableRequest>();
+            requests.Add(scriptableObjectTowerReplace);
+            requests.Add(scriptableObjectTowerSell);
+            UIManager.Instance.CreateSelectorPanelForRequests(requests, out requestSelectorPanel, this);
+            SelectionManager.Instance.contextEvent += OnOpenContext;
+        }
+      
+    }
+
+    public void Unselect()
+    {
+        if (requestSelectorPanel != null)
+        {
+            CloseRequestPanel();
+        }
+    }
+
+    void CloseRequestPanel()
+    {
+        SelectionManager.Instance.contextEvent -= OnOpenContext;
+        UIManager.Instance.UnselectSelectorPanel(requestSelectorPanel);
+        requestSelectorPanel = null;
+    }
+
+    public void QueueRequest(RequestTransaction requestTransaction)
+    {
+        CurrencyTransaction currencyTransaction = new();
+        foreach (SRequestCost cost in requestTransaction.costs)
+        {
+            switch (cost.Currency.CurrencyTyp)
+            {
+                case CurrencyType.Gold:
+                    {
+                        currencyTransaction.Costs.Add(cost);
+                    }
+                    break;
+                case CurrencyType.Health:
+                    {
+                        currencyTransaction.Costs.Add(cost);
+                    }
+                    break;
+                default:
+                    Ultra.Utilities.Instance.DebugErrorString("BuildingPhase", "QueueRequest", "CurrencyType not implemented or UNKNOWN!");
+                    break;
+            }
+        }
+
+        GameManager.Instance.ResourceAccountant.AddTransaction(currencyTransaction);
+
+        foreach (ARequest request in requestTransaction.requests)
+        {
+            request.ExecuteRequest(this);
+        }
+
+        CloseRequestPanel();
+    }
+
+    void OnOpenContext(IContextAction newContext, IContextAction oldContext)
+    {
+        CloseRequestPanel();
     }
 }

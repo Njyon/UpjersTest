@@ -106,7 +106,7 @@ public class PlayerSelectionComponent
     {
         PointerEventData pointerData = new PointerEventData(EventSystem.current)
         {
-            position = Input.mousePosition
+            position = Mouse.current.position.ReadValue()
         };
 
         List<RaycastResult> results = new List<RaycastResult>();

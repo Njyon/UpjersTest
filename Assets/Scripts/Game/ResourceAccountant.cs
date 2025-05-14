@@ -105,4 +105,9 @@ public class ResourceAccountent
     {
         history.UndoLast();
     }
+
+    public CurrencyTransaction GetLastTransaction()
+    {
+        return history.GetLastEntry();
+    }
 }

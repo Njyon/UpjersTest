@@ -1,25 +1,46 @@
 using System;
 using System.Collections.Generic;
 using Ultra;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class BuildingManager : MonoSingelton<BuildingManager>
 {
+    public Action onTowerBuild;
+    public Action onTowerBuildCancled;
+    public Action onTowerReplace;
+    public Action onTowerReplaceCanceled;
+
     [SerializeField] Transform worldTransform;
     bool tryingToBuild = false;
+    bool tryingToReplace = false;
     Tower cachedBuildingTower;
     Vector2Int cachedTowerSize;
     GridTile cachedHitGridTile = null;
     string towerNameFlag = "Try Building ";
     SelectionManager selectionManager;
     public Action cancleBuild;
+    public List<GridTile> cachedTowerPlacedGridTiles;
 
-    bool TryingToBuild
+    public bool TryingToBuild
     {
         get { return tryingToBuild; }
-        set {
+        private set {
             tryingToBuild = value; 
             if (!tryingToBuild)
+            {
+                cachedHitGridTile = null;
+            }
+        }
+    }
+    public bool TryingToReplace
+    {
+        get { return tryingToReplace; }
+        private set
+        {
+            tryingToReplace = value;
+            if (!tryingToReplace)
             {
                 cachedHitGridTile = null;
             }
@@ -31,6 +52,8 @@ public class BuildingManager : MonoSingelton<BuildingManager>
         selectionManager = SelectionManager.Instance;
         selectionManager.selectionEvent += OnSelect;
         selectionManager.contextEvent += OnContextAction;
+
+        cachedTowerPlacedGridTiles = new List<GridTile>();
     }
 
     void OnDestroy()
@@ -48,17 +71,17 @@ public class BuildingManager : MonoSingelton<BuildingManager>
         cachedBuildingTower = Instantiate(towerPrefab, worldTransform);
         cachedBuildingTower.gameObject.name = towerNameFlag + cachedBuildingTower.gameObject.name;
         cachedBuildingTower.BuildingState = TowerBuildingState.TryToBuild;
-        cachedTowerSize = towerSize;
+        cachedBuildingTower.towerSize = towerSize;
+        cachedTowerSize = cachedBuildingTower.towerSize;
 
         TryingToBuild = true;
-        
     }
 
     void Update()
     {
-        if (TryingToBuild)
+        if (TryingToBuild || TryingToReplace)
         {
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
             RaycastHit[] hits = Physics.RaycastAll(ray, 100f);
             foreach (RaycastHit hit in hits) 
             {
@@ -70,7 +93,7 @@ public class BuildingManager : MonoSingelton<BuildingManager>
                 if (cachedBuildingTower != null)
                 {
                     List<Vector3> tilePositions = new List<Vector3>();
-                    List<GridTile> gridTiles = new List<GridTile>();
+                    cachedTowerPlacedGridTiles.Clear();
 
                     for (int x = 0; x < cachedTowerSize.x; x++)
                     {
@@ -82,11 +105,11 @@ public class BuildingManager : MonoSingelton<BuildingManager>
                             if (GridManager.Instance.gridWidth > gridTile.GridPos.x + x && GridManager.Instance.gridHeight > gridTile.GridPos.y + y)
                             {
                                 GridTile tile = GridManager.Instance.GridTiles[gridTile.GridPos.x + x, gridTile.GridPos.y + y];
-                                gridTiles.Add(tile);
+                                cachedTowerPlacedGridTiles.Add(tile);
                             }
                             else
                             {
-                                gridTiles.Add(null);
+                                cachedTowerPlacedGridTiles.Add(null);
                             }
                         }
                     }
@@ -97,7 +120,7 @@ public class BuildingManager : MonoSingelton<BuildingManager>
                     cachedBuildingTower.transform.position = TowerPosition;
 
                     bool canPlaceTomwer = true;
-                    foreach (var tile in gridTiles)
+                    foreach (var tile in cachedTowerPlacedGridTiles)
                     {
                         if (tile == null || tile.IsBlocked)
                         {
@@ -131,7 +154,7 @@ public class BuildingManager : MonoSingelton<BuildingManager>
 
     void OnSelect(List<ISelectable> newSelection, List<ISelectable> oldSelection)
     {
-        if (TryingToBuild) 
+        if (TryingToBuild || TryingToReplace) 
         {
             Build();
         }
@@ -139,16 +162,36 @@ public class BuildingManager : MonoSingelton<BuildingManager>
 
     void OnContextAction(IContextAction newContext, IContextAction oldContext)
     {
-        CancleBuild();
+        if (TryingToBuild)
+            CancleBuild();
+        if (TryingToReplace)
+            CancelTryToReplace();
     }
 
     void Build()
     {
         if (cachedBuildingTower != null)
         {
+            foreach (GridTile tile in cachedTowerPlacedGridTiles)
+            {
+                if (tile.IsBlocked) return;
+            }
+
             cachedBuildingTower.BuildingState = TowerBuildingState.Build;
             cachedBuildingTower.gameObject.name = cachedBuildingTower.gameObject.name.Substring(towerNameFlag.Length);
-            cachedBuildingTower = null; 
+            cachedBuildingTower.gridTilesTheTowerIsBuildOn = new List<GridTile>(cachedTowerPlacedGridTiles);
+            foreach (GridTile tile in cachedBuildingTower.gridTilesTheTowerIsBuildOn)
+            {
+                tile.IsBuildOn = true;
+            }
+
+            cachedBuildingTower = null;
+            cachedTowerPlacedGridTiles.Clear();
+
+            TryingToBuild = false;
+            TryingToReplace = false;
+
+            if (onTowerBuild != null) onTowerBuild.Invoke();
         }
     }
 
@@ -162,6 +205,46 @@ public class BuildingManager : MonoSingelton<BuildingManager>
             GameManager.Instance.ResourceAccountant.RemoveLastTransaction();
 
             if (cancleBuild != null) cancleBuild.Invoke();
+
+            if (onTowerBuildCancled != null) onTowerBuildCancled.Invoke();
         }
+    }
+
+    void CancelTryToReplace()
+    {
+        if (TryingToReplace && cachedBuildingTower != null)
+        {
+            cachedBuildingTower.transform.position = cachedBuildingTower.lastPlacedPosition;
+            cachedBuildingTower.BuildingState = TowerBuildingState.Build;
+
+            foreach (GridTile tile in cachedBuildingTower.gridTilesTheTowerIsBuildOn)
+            {
+                tile.IsBuildOn = true;
+            }
+
+            cachedBuildingTower = null;
+            TryingToReplace = false;
+
+            if (onTowerReplaceCanceled != null) onTowerReplaceCanceled.Invoke();
+        }
+    }
+
+    public void ReplaceTower(Tower towerToReplace)
+    {
+        if (TryingToBuild)
+        {
+            CancleBuild();
+        }
+        TryingToReplace = true;
+        cachedBuildingTower = towerToReplace;
+        cachedBuildingTower.gameObject.name = towerNameFlag + cachedBuildingTower.gameObject.name;
+        cachedBuildingTower.BuildingState = TowerBuildingState.Replace;
+        cachedTowerSize = cachedBuildingTower.towerSize;
+
+        foreach (GridTile tile in cachedBuildingTower.gridTilesTheTowerIsBuildOn)
+        {
+            tile.IsBuildOn = false;
+        }
+        if (onTowerReplace != null) onTowerReplace.Invoke();
     }
 }

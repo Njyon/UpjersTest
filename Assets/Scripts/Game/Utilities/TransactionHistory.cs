@@ -59,4 +59,12 @@ public class TransactionHistory<T>
         count = 0;
     }
 
+    public T GetLastEntry()
+    {
+        if (count == 0)
+            throw new InvalidOperationException("No transactions available.");
+
+        int lastIndex = (nextIndex - 1 + capacity) % capacity;
+        return history[lastIndex];
+    }
 }

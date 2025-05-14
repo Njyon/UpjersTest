@@ -418,6 +418,8 @@ MonoBehaviour:
   enemiesInRange: []
   attackLogic:
     rid: 7132807087811985848
+  scriptableObjectTowerReplace: {fileID: 11400000, guid: ef3fb77ce57eb2d43b92c63444d5862b, type: 2}
+  scriptableObjectTowerSell: {fileID: 11400000, guid: 21b357744662cd64d9015e9320d34ffa, type: 2}
   references:
     version: 2
     RefIds:

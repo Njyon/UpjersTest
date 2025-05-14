@@ -50,19 +50,54 @@ public class PlayerCameraController : MonoBehaviour
         playerInputs.Enable();
 
         /// Debug ///
-        playerInputs.Player.DebugLevelUp.performed += ctx => DebugUp();
-        playerInputs.Player.DebugLevelDown.performed += ctx => DebugDown();
+        playerInputs.Player.DebugLevelUp.performed += OnDebugUp;
+        playerInputs.Player.DebugLevelDown.performed += OnDebugDown;
 
         /// Player Actions ///
-        playerInputs.Player.Interact.performed += ctx => Interact(Input.mousePosition);
-        playerInputs.Player.ContextAction.performed += ctx => ContextAction(Input.mousePosition);
+        playerInputs.Player.Interact.performed += OnInteract;
+        playerInputs.Player.ContextAction.performed += OnContextAction;
 
         Cursor.lockState = CursorLockMode.Confined;
     }
 
+    void OnDestroy()
+    {
+        /// Debug ///
+        playerInputs.Player.DebugLevelUp.performed -= OnDebugUp;
+        playerInputs.Player.DebugLevelDown.performed -= OnDebugDown;
+
+        /// Player Actions ///
+        playerInputs.Player.Interact.performed -= OnInteract;
+        playerInputs.Player.ContextAction.performed -= OnContextAction;
+
+        playerInputs.Disable();
+
+        playerSelection = null;
+    }
+
     void Update()
     {
-        MousePos(Input.mousePosition);
+        MousePos(Mouse.current.position.ReadValue());
+    }
+
+    void OnInteract(InputAction.CallbackContext context)
+    {
+        Interact(Mouse.current.position.ReadValue());
+    }
+
+    void OnContextAction(InputAction.CallbackContext context)
+    {
+        ContextAction(Mouse.current.position.ReadValue());
+    }
+
+    void OnDebugUp(InputAction.CallbackContext context)
+    {
+        DebugUp();
+    }
+
+    void OnDebugDown(InputAction.CallbackContext context)
+    {
+        DebugDown();
     }
 
     void MousePos(Vector2 mousePos)

@@ -23,12 +23,16 @@ public class BuildingPhase : IGamePhase, IRequestOwner
         uiManager.startButton.onClick.AddListener(OnStartButtonClicked);
         selectionManager.selectionEvent.AddListener(OnNewSelect);
         buildingManager.cancleBuild += OnCancleBuild;
+        buildingManager.onTowerReplace += OnTowerReplace;
     }
 
     public void ExitPhase()
     {
         if (buildingManager != null)
+        {
             buildingManager.cancleBuild -= OnCancleBuild;
+            buildingManager.onTowerReplace -= OnTowerReplace;
+        }
 
         if (selectionManager != null)
         {
@@ -110,6 +114,8 @@ public class BuildingPhase : IGamePhase, IRequestOwner
         }
 
         DeselectSelectorPanel();
+
+        buildingManager.onTowerBuild += OnTowerBuild;
     }
 
     private static SRequestCost CreateCostWithNegativeAmount(SRequestCost cost)
@@ -124,15 +130,16 @@ public class BuildingPhase : IGamePhase, IRequestOwner
     public void OnNewSelect(List<ISelectable> newSelection, List<ISelectable> oldSelection)
     {
         DeselectSelectorPanel();
+        uiManager?.buildingPhaseObj.SetActive(true);
     }
 
     void DeselectSelectorPanel()
     {
-        if (selectionManager != null)
+        if (selectionManager != null && selectorPanel != null)
         {
             if (selectionManager.contextEvent != null) selectionManager.contextEvent.RemoveListener(OnOpenContext);
             uiManager?.UnselectSelectorPanel(selectorPanel);
-            uiManager?.buildingPhaseObj.SetActive(true);
+            selectorPanel = null;
         }
     }
 
@@ -144,5 +151,25 @@ public class BuildingPhase : IGamePhase, IRequestOwner
     void OnOpenContext(IContextAction newContext, IContextAction oldContext)
     {
         DeselectSelectorPanel();
+        uiManager?.buildingPhaseObj.SetActive(true);
+    }
+
+    void OnTowerBuild()
+    {
+        buildingManager.onTowerBuild -= OnTowerBuild;
+        uiManager?.buildingPhaseObj.SetActive(true);
+    }
+
+    void OnTowerReplace()
+    {
+        buildingManager.onTowerReplaceCanceled += OnTowerReplacedCanceled;
+        buildingManager.onTowerBuild += OnTowerBuild;
+        uiManager?.buildingPhaseObj.SetActive(false);
+    }
+
+    void OnTowerReplacedCanceled()
+    {
+        buildingManager.onTowerReplaceCanceled -= OnTowerReplacedCanceled;
+        uiManager?.buildingPhaseObj.SetActive(true);
     }
 }
