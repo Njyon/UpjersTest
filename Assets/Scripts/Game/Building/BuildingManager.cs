@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using Ultra;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+/// <summary>
+/// Building Manager to handle creating towers on the Grid
+/// </summary>
 public class BuildingManager : MonoSingelton<BuildingManager>
 {
     public Action onTowerBuild;
@@ -12,6 +14,9 @@ public class BuildingManager : MonoSingelton<BuildingManager>
     public Action onTowerReplace;
     public Action onTowerReplaceCanceled;
 
+    /// <summary>
+    /// Parent Object of the Towers so we dont spam the Inspector
+    /// </summary>
     [SerializeField] Transform worldTransform;
     bool tryingToBuild = false;
     bool tryingToReplace = false;

@@ -2,6 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+// Refactoring -> valueChange per second is probably to much here, this should be handelt by a Buff Component or something else (also the timers etc)
+
+/// <summary>
+/// Class to handle resources like gold, wood, Health, Stamina etc
+/// </summary>
 public class ResourceBase
 {
 	public delegate void ValueChange(float newValue, float oldValue);

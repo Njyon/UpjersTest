@@ -2,6 +2,11 @@ using System.Collections.Generic;
 using Ultra;
 using UnityEngine;
 
+// Refactor -> openContext should get its own Manager?
+
+/// <summary>
+/// Handle Selection like LeftClick, RectSelection
+/// </summary>
 public class SelectionManager : MonoSingelton<SelectionManager>
 {
     public UltEvents.UltEvent<List<ISelectable>, List<ISelectable>> selectionEvent = new UltEvents.UltEvent<List<ISelectable>, List<ISelectable>>();

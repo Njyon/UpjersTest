@@ -1,6 +1,9 @@
 using UnityEngine;
 using UnityEngine.UI;
 
+/// <summary>
+/// Pooled Resource Element is used to visualise Resources (Value + Image)
+/// </summary>
 public class ResourceUIElement : MonoBehaviour, IUIElement, IUIPoolableUIElement<ResourceUIElement>
 {
     [SerializeField] Image resourceImage;
@@ -14,6 +17,9 @@ public class ResourceUIElement : MonoBehaviour, IUIElement, IUIPoolableUIElement
         resourceText.text = costAmountString;
     }
 
+    /// <summary>
+    /// Remove Data and return to Pool
+    /// </summary>
     public void Cleanup()
     {
         resourceImage.sprite = null;

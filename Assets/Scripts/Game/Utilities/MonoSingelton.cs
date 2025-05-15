@@ -2,6 +2,11 @@ using UnityEngine;
 
 namespace Ultra
 {
+	/// <summary>
+	/// Singelton for Monobehaviours. Usefull for GameObjects that should be interactable via Inspector out of Playmode
+	/// (Technicly not safe, user can add more that 1 Monobehaviour at the scene)
+	/// </summary>
+	/// <typeparam name="T"> The Monobehaviour that should be Singelt </typeparam>
 	public class MonoSingelton<T> : MonoBehaviour where T : MonoBehaviour
 	{
 		private static bool shuttingDown = false;

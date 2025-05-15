@@ -2,6 +2,9 @@ using System.Collections.Generic;
 using Ultra;
 using UnityEngine;
 
+/// <summary>
+/// Singleton GridManager responsible for generating a grid of tiles and creating a path through it
+/// </summary>
 public class GridManager : MonoSingelton<GridManager>
 {
     [Header("Grid")]
@@ -11,6 +14,10 @@ public class GridManager : MonoSingelton<GridManager>
     public float padding = 0.2f;
     public GameObject parent;
     Vector3 gridSize = Vector3.zero;
+
+    /// <summary>
+    /// Dimensions of the a grid tile
+    /// </summary>
     public Vector3 TileSize
     {
         get { return gridSize; }
@@ -18,11 +25,17 @@ public class GridManager : MonoSingelton<GridManager>
 
     [Header("Path")]
     GridTile[,] gridTiles;
+    /// <summary>
+    /// All grid tiles in the grid
+    /// </summary>
     public GridTile[,] GridTiles
     {
         get { return gridTiles; }
     }
     List<Vector2Int> path = new List<Vector2Int>();
+    /// <summary>
+    /// The enemy path through the Grid
+    /// </summary>
     public List<Vector2Int> Path
     {
         get { return path; }
@@ -102,7 +115,7 @@ public class GridManager : MonoSingelton<GridManager>
             if (IsInsideGrid(up) && !visited.Contains(up)) possibleSteps.Add(up);
             if (IsInsideGrid(down) && !visited.Contains(down)) possibleSteps.Add(down);
 
-            if (possibleSteps.Count == 0) break; // Deadend
+            if (possibleSteps.Count == 0) break; // Deadend, could be unsafe
 
             // Get random next step
             Vector2Int next = possibleSteps[Random.Range(0, possibleSteps.Count)];
@@ -146,6 +159,11 @@ public class GridManager : MonoSingelton<GridManager>
         }
     }
 
+    /// <summary>
+    /// Create a grid tile and return the bounds size
+    /// </summary>
+    /// <param name="prefab"> To be spawned grid tile </param>
+    /// <returns> Bound size of Renderer from grid tile </returns>
     Vector3 GetPrefabSize(GridTile prefab)
     {
         GridTile temp = Instantiate(prefab);

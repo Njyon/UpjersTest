@@ -4,7 +4,7 @@ using AYellowpaper.SerializedCollections;
 using UnityEngine;
 
 [Serializable]
-[CreateAssetMenu(menuName = "ScriptableObject/WaveData")]
+[CreateAssetMenu(menuName = "Scriptable Objects/WaveData")]
 public class WaveData : ScriptableObject
 {
 

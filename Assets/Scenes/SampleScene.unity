@@ -1953,7 +1953,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8304eb0962ca34d4ab6ffe0d995a6881, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHealth: 1
+  maxHealth: 20
   startGold: 200
   possibleBuildingRequests:
   - {fileID: 11400000, guid: e37e773c28a544c45a7bcb11b5420e84, type: 2}

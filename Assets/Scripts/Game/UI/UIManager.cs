@@ -3,6 +3,9 @@ using Ultra;
 using UnityEngine;
 using UnityEngine.UI;
 
+/// <summary>
+/// Handle all UI Elements, Safe all UI links
+/// </summary>
 public class UIManager : MonoSingelton<UIManager>
 {
     // there is probably a better solution than this but good enough for now
@@ -29,6 +32,12 @@ public class UIManager : MonoSingelton<UIManager>
     public GameObject gameOverButtonObj;
     public Button gameOverButton;
 
+    /// <summary>
+    /// Create a Panel with requests, for every request add a button to represent the request
+    /// </summary>
+    /// <param name="requests"> List of request inside the panel </param>
+    /// <param name="selectorPanelElement"> Created panel </param> // should probably be the return type but no time for refactoring now
+    /// <param name="requestOwner"> The owner of the Requests </param>
     public void CreateSelectorPanelForRequests(List<ScriptableRequest> requests, out SelectorPanelElement selectorPanelElement, IRequestOwner requestOwner)
     {
         selectorPanelElement = CreateSelectionPanel();
@@ -52,11 +61,20 @@ public class UIManager : MonoSingelton<UIManager>
         }
     }
 
+    /// <summary>
+    /// Remove the Panel from the screen
+    /// </summary>
+    /// <param name="selectorPanelElement"> Panel to be removed from screen </param>
     public void UnselectSelectorPanel(SelectorPanelElement selectorPanelElement)
     {
         RemoveSelectorPanelElement(selectorPanelElement);
     }
 
+    /// <summary>
+    /// Get A ResourceUIElement from the pool
+    /// </summary>
+    /// <param name="parent"> Parent the ResourceUIElement should be child of </param>
+    /// <returns> The ResourceUIElement from the pool </returns>
     ResourceUIElement CreateResourceUIElement(Transform parent)
     {
         if (parent == null)
@@ -70,6 +88,11 @@ public class UIManager : MonoSingelton<UIManager>
         return resourceElement;
     }
 
+    /// <summary>
+    /// Get A RequestUIElement from the pool
+    /// </summary>
+    /// <param name="parent"> Parent the RequestUIElement should be child of </param>
+    /// <returns> The RequestUIElement from the pool </returns>
     RequestUIElement CreateRequestUIElement(Transform parent)
     {
         if (parent == null)
@@ -83,6 +106,10 @@ public class UIManager : MonoSingelton<UIManager>
         return requestElement;
     }
 
+    /// <summary>
+    /// Get A Panel from the pool
+    /// </summary>
+    /// <returns> The Panel from the pool </returns>
     SelectorPanelElement CreateSelectionPanel()
     {
         SelectorPanelElement selectorPanelElement = GameAssets.Instance.UI.SelectorPanelElementPool.GetValue();
@@ -91,6 +118,10 @@ public class UIManager : MonoSingelton<UIManager>
         return selectorPanelElement;
     }
 
+    /// <summary>
+    /// Remove the Panel from the Screen and put it back in the Pool
+    /// </summary>
+    /// <param name="selectorPanelElement"> the Panel that should be removed and cleaned up </param>
     void RemoveSelectorPanelElement(SelectorPanelElement selectorPanelElement)
     {
         if (selectorPanelElement == null)

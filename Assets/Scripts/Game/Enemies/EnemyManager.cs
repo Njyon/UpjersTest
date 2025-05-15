@@ -4,6 +4,7 @@ using AYellowpaper.SerializedCollections;
 using Ultra;
 using UnityEngine;
 
+
 public class EnemyManager : MonoSingelton<EnemyManager>
 {
     [SerializeField] Transform enemyHolder;

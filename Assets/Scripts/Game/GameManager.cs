@@ -3,6 +3,8 @@ using AYellowpaper.SerializedCollections;
 using Ultra;
 using UnityEngine;
 
+// Refactoring -> Object should be probably a Component of the Player and not a Singelton
+
 public class GameManager : MonoSingelton<GameManager>
 {
     [Header("PlayerHealth")]

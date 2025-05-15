@@ -1,6 +1,10 @@
 using UnityEngine;
 using UnityEngine.Rendering;
 
+/// <summary>
+/// GamePhaseManager handels all available GamePhases
+/// Used like a SingleState state machine (only 1 game phase can be active at the time)
+/// </summary>
 public class GamePhaseManager : MonoBehaviour
 {
     IGamePhase currentPhase;
@@ -24,7 +28,12 @@ public class GamePhaseManager : MonoBehaviour
         }
     }
 
-    public void StartPhase(GamePhaseType phaseType)
+    /// <summary>
+    /// Handle the new GamePhase,
+    /// Exit the old phase, Create new phase, Enter new phase
+    /// </summary>
+    /// <param name="phaseType"></param>
+    void StartPhase(GamePhaseType phaseType)
     {
         currentPhase?.ExitPhase();
 
@@ -44,6 +53,12 @@ public class GamePhaseManager : MonoBehaviour
         StartPhase(nextPhase);
     }
 
+    /// <summary>
+    /// Creates the GamePhase Class
+    /// Every Enum Type needs his own implementation
+    /// </summary>
+    /// <param name="type"> GamePhase EnumTpye to create </param>
+    /// <returns> Returns the GamePhase object </returns>
     IGamePhase CreatePhase(GamePhaseType type)
     {
         IGamePhase phase = null;    

@@ -2,6 +2,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+/// <summary>
+/// Pooled Button Object thats used to Visulize Requests
+/// </summary>
 public class RequestUIElement : MonoBehaviour, IUIElement, IUIPoolableUIElement<RequestUIElement>
 {
     [SerializeField] Image requestImage;
@@ -41,6 +44,9 @@ public class RequestUIElement : MonoBehaviour, IUIElement, IUIPoolableUIElement<
         requestOwner.QueueRequest(new RequestTransaction(scriptableRequest.Requests, scriptableRequest.Costs));
     }
 
+    /// <summary>
+    /// Remove Data and return back to its pool
+    /// </summary>
     public void Cleanup()
     {
         requestImage.sprite = null;
